@@ -8,7 +8,7 @@ function load_options() {
             label = document.createElement("label");
             label.setAttribute(
                 "title",
-                chrome.i18n.getMessage("options_neverCheckTooltip")
+                chrome.i18n.getMessage("options_neverCheckTooltip"),
             );
             span = document.createElement("span");
             div = document.createElement("div");
@@ -19,7 +19,7 @@ function load_options() {
             if (
                 Array.from(store_extensions.keys()).some(
                     (x) =>
-                        x.test(ex.updateUrl) && store_extensions.get(x).ignore
+                        x.test(ex.updateUrl) && store_extensions.get(x).ignore,
                 )
             ) {
                 input.checked = true;
@@ -33,12 +33,12 @@ function load_options() {
                         ex.id +
                         "/" +
                         ex.icons[0].size +
-                        "/0"
+                        "/0",
                 );
             else
                 img.setAttribute(
                     "src",
-                    "chrome://extension-icon/" + ex.id + "/16/0"
+                    "chrome://extension-icon/" + ex.id + "/16/0",
                 );
             span.innerHTML = ex.name;
             label.appendChild(input);
@@ -60,12 +60,13 @@ function load_options() {
                 return ex.name + "|" + ex.id + "|" + ex.updateUrl;
             })
             .join("\r\n");
-        document.getElementById("import_all_button").onclick = () => {
+        document.getElementById("import_all_button").onclick = (event) => {
             let extList = [];
             for (const m of document
                 .getElementById("import_export_list")
                 .value.matchAll(/^(.*)\|([a-z]{32})(?:\||$)(.*)$/gim)) {
-                if (installed_extensions.includes(m[2])) continue;
+                if (!event.ctrlKey && installed_extensions.includes(m[2]))
+                    continue;
                 if (m[3])
                     extList.push({
                         name: m[1],
@@ -87,14 +88,14 @@ function load_options() {
                     installed_versions,
                     appid,
                     updatever,
-                    is_webstore
+                    is_webstore,
                 ) {
                     let crx_url = updateCheck["@codebase"];
                     promptInstall(crx_url, is_webstore);
                 },
                 null,
                 null,
-                extList
+                extList,
             );
         };
         chrome.storage.sync.get(default_options, function (stored_values) {
@@ -119,7 +120,7 @@ function load_options() {
                                         if (chrome.runtime.lastError) {
                                             node.checked = !checked;
                                         }
-                                    }
+                                    },
                                 );
                             });
                         } else {
@@ -134,7 +135,7 @@ function load_options() {
                                         if (chrome.runtime.lastError) {
                                             node.value = "60";
                                         }
-                                    }
+                                    },
                                 );
                             });
                         }
@@ -144,19 +145,19 @@ function load_options() {
                     const target_node = node;
                     let checkbox_input =
                         target_node.previousElementSibling.getElementsByTagName(
-                            "input"
+                            "input",
                         )[0];
                     checkbox_input.addEventListener("change", (e) => {
                         if (e.target.checked) {
                             target_node.classList.remove("disabled");
                             for (let input of target_node.getElementsByTagName(
-                                "input"
+                                "input",
                             ))
                                 input.disabled = false;
                         } else {
                             target_node.classList.add("disabled");
                             for (let input of target_node.getElementsByTagName(
-                                "input"
+                                "input",
                             ))
                                 input.disabled = true;
                         }
@@ -164,7 +165,7 @@ function load_options() {
                     if (!checkbox_input.checked) {
                         target_node.classList.add("disabled");
                         for (let input of target_node.getElementsByTagName(
-                            "input"
+                            "input",
                         ))
                             input.disabled = true;
                     }

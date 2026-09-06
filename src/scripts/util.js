@@ -150,6 +150,7 @@ function checkForUpdates(
     completed_callback = null,
     custom_ext_list = [],
 ) {
+    let badge_display = "";
     chrome.management.getAll(function (e) {
         e.push(...custom_ext_list);
         let default_options = { ...DEFAULT_MANAGEMENT_OPTIONS };
@@ -294,32 +295,14 @@ function checkForUpdates(
                                         );
                                     // }
                                 }
-                                chrome.action.getBadgeText(
-                                    {},
-                                    function (currentText) {
-                                        let disp =
-                                            (updateCount || "") +
-                                            (parseInt(currentText) || "") +
-                                            "";
-                                        chrome.action.setBadgeText(
-                                            {
-                                                text: disp,
-                                            },
-                                            () => {
-                                                chrome.storage.local.set(
-                                                    {
-                                                        badge_display: disp,
-                                                    },
-                                                    () => {
-                                                        resolve();
-                                                    },
-                                                );
-                                            },
-                                        );
-                                    },
-                                );
+                                badge_display =
+                                    (updateCount || "") +
+                                    (parseInt(badge_display) || "") +
+                                    "";
+                                resolve();
                             })
                             .catch((e) => {
+                                reject();
                                 console.error(
                                     `Error updating extension [${
                                         ext_id || ext_name
@@ -337,36 +320,33 @@ function checkForUpdates(
                                             name: ext_name,
                                         });
                                 }
-                                reject();
                             });
                     });
                 }
-                chrome.action.setBadgeText(
-                    {
-                        text: "",
-                    },
-                    () => {
-                        let promises = updateUrls
-                            .filter((x) => x.url)
-                            .map((uurl) =>
-                                update_extension(uurl.url, uurl.id, uurl.name),
-                            );
-                        Promise.allSettled(promises).then((plist) => {
-                            if (plist.some((x) => x.status == "rejected")) {
-                                chrome.action.getBadgeText(
-                                    {},
-                                    function (currentText) {
-                                        if (!(parseInt(currentText) > 0))
-                                            chrome.action.setBadgeText({
-                                                text: "?",
-                                            });
-                                    },
-                                );
-                            }
-                            if (completed_callback) completed_callback();
-                        });
-                    },
-                );
+                let promises = updateUrls
+                    .filter((x) => x.url)
+                    .map((uurl) =>
+                        update_extension(uurl.url, uurl.id, uurl.name),
+                    );
+                Promise.allSettled(promises).then((plist) => {
+                    if (
+                        plist.some((x) => x.status == "rejected") &&
+                        !(parseInt(badge_display) > 0)
+                    ) {
+                        badge_display = "?";
+                    }
+                    chrome.action.setBadgeText(
+                        {
+                            text: badge_display,
+                        },
+                        () => {
+                            chrome.storage.local.set({
+                                badge_display: badge_display,
+                            });
+                        },
+                    );
+                    if (completed_callback) completed_callback();
+                });
             });
         });
     });
